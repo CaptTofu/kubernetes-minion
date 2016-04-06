@@ -1,0 +1,41 @@
+---
+
+- name: debug registry path
+  debug: msg="{{ registry_path }}"
+  tags: 
+  - registry-debug
+
+- name: add internal apt repo
+  become: yes
+  apt_repository: repo="deb http://{{ apt_repo_host }}/deb/ amd64/" state=present
+
+- name: Install Kubernetes minion from internal repo
+  become: yes
+  apt: pkg="{{ item }}" state="installed" force="yes"
+  with_items:
+    - kubernetes-client
+    - kubernetes-minion
+
+- name: include systemd plays
+  become: yes
+  include: systemd.yml
+  when: ansible_service_mgr == 'systemd' 
+
+- name: incude upstart plays
+  become: yes
+  include: upstart.yml
+  when: ansible_service_mgr == 'upstart' 
+
+- name: pull skydns images from local repository
+  docker_pull:
+    repo: "{{ registry_path }}/google_containers/{{ item.key }}"
+    tag: "{{ item.value }}"
+  with_dict: "{{ dns_images }}"
+  when: dns_images is defined
+
+- name: Start Kubernetes minion component services
+  become: yes
+  service: name="{{ item }}" state=started
+  with_items:
+    - kubelet
+    - kube-proxy

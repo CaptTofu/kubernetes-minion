@@ -1,0 +1,26 @@
+---
+
+- name: Render upstart defaults
+  become: yes
+  template: src="{{ item }}.j2" dest="/etc/default/{{ item }}"
+  with_items: kubernetes_minion_components
+
+- name: Copy upstart configuration files
+  become: yes
+  copy: src="{{ item }}.conf" dest="/etc/init/{{ item }}.conf"
+  with_items: kubernetes_minion_components
+
+- name: Flannel upstart configuration files
+  become: yes
+  copy: src="{{ item }}.conf" dest="/etc/init/{{ item }}.conf"
+  with_items:
+    - flanneld
+
+- name: Stop running Docker
+  become: yes
+  service: name=docker state=stopped
+
+- name: Unset docker bridge
+  become: yes
+  shell: "ip addr delete {{ ansible_docker0.ipv4.address }}/{{ ansible_docker0.ipv4.netmask }} dev docker0"
+  when: ansible_docker0.ipv4 and ansible_docker0 is defined

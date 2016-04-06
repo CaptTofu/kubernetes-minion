@@ -1,0 +1,12 @@
+---
+
+- name: Render systemd unit files 
+  template: src="{{ item }}.service.j2" dest="/etc/systemd/system/{{ item }}.service"
+  with_items: "{{ kubernetes_minion_components }}"
+
+- name: Add environment variables for kubernetes  
+  lineinfile: dest='/etc/environment' line='{{ item.key }}={{ item.value }}' state=present create=yes
+  with_dict: "{{ env_vars }}"
+
+- name: reload systemd
+  shell: systemctl daemon-reload

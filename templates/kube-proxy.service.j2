@@ -1,0 +1,12 @@
+[Unit]
+Description=Kubernetes Proxy
+Documentation=https://github.com/GoogleCloudPlatform/kubernetes
+Requires=kubelet.service
+After=kubelet.service
+[Service]
+EnvironmentFile=/etc/environment
+ExecStart=/opt/bin/kube-proxy \
+  --master=${KUBERNETES_MASTER} \
+  --logtostderr=true
+Restart=always
+RestartSec=10

@@ -1,0 +1,9 @@
+---
+
+kubernetes_minion_components:
+  - kubelet
+  - kube-proxy
+
+env_vars:
+  KUBERNETES_MASTER: "http://{{ kubernetes_master }}:8080"  
+  KUBERNETES_NAMESERVER: "{{ kubernetes_nameserver }}"

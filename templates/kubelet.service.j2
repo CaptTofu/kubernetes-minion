@@ -1,0 +1,26 @@
+[Unit]
+Description=Kubernetes Kubelet
+Documentation=https://github.com/GoogleCloudPlatform/kubernetes
+Requires=flanneld.service
+After=flanneld.service
+[Service]
+EnvironmentFile=/etc/environment
+ExecStart=/opt/bin/kubelet \
+  --address=0.0.0.0 \
+  --port=10250 \
+  --hostname_override={{ inventory_hostname }} \
+  --api_servers=http://{{ kubernetes_master }}:8080 \
+{# if anything other than google (private registry) -#}
+{% if registry_path != 'gcr.io' %}
+  --pod-infra-container-image={{ registry_path }}/google_containers/pause:0.8.0 \
+{% endif -%}
+{% if kubernetes_nameserver is defined and kubernetes_nameserver|length >= 7 %}
+  --cluster_dns={{ kubernetes_nameserver }} \
+{% endif %}
+{% if kubernetes_domain is defined and kubernetes_domain|length > 0 %}
+  --cluster_domain={{ kubernetes_domain }} \
+{% endif %}
+  --enable_server=true \
+  --logtostderr=true
+Restart=always
+RestartSec=10
